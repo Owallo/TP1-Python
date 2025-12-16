@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from typing import Optional
 from app.models import Session as SessionLocal, Author
- 
+
 router = APIRouter(
     prefix="/authors",
     tags=["/authors"]
@@ -118,20 +118,20 @@ def delete_auteur(auteur_id: int, db: Session = Depends(get_db)):
 
 @router.post("/")
 def create_auteur(
-    id : int
-    prenom = str
-    nom = str
-    date_naissance = str
-    nationalite = str
+    id : int,
+    prenom : str,
+    nom : str,
+    date_naissance : str,
+    nationalite : str,
     db: Session = Depends(get_db)
 ):
     """Ajouter un nouvel auteur"""
-    new_auteur = auteur(
-        id = id
-        prenom = prenom
-        nom = nom
-        date_naissance = date_naissance
-        nationalite = nationalite
+    new_auteur = Author(
+        id = id,
+        prenom = prenom,
+        nom = nom,
+        date_naissance = date_naissance,
+        nationalite = nationalite,
     )
     
     db.add(new_auteur)
