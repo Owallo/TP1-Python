@@ -1,10 +1,9 @@
 from datetime import datetime
-from sqlalchemy import Column, Integer, String, Text, ForeignKey, DateTime, Date, Enum
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy import Column, Integer, String, Text, ForeignKey, DateTime, Date, Enum, CheckConstraint, UniqueConstraint
+from database import Base
 from sqlalchemy.orm import relationship
 import enum
 
-Base = declarative_base()
 
 
 class CategorieEnum(str, enum.Enum):
@@ -34,6 +33,11 @@ class Author(Base):
     
     # Relationships
     livres = relationship("Book", back_populates="auteur")
+    
+    # Contraintes
+    __table_args__ = (
+        UniqueConstraint('prenom', 'nom', name='uq_author_full_name'),
+    )
 
 
 class Book(Base):
@@ -52,11 +56,16 @@ class Book(Base):
     maison_edition = Column(String(255), nullable=False)
     
     # Foreign Key
-    auteur_id = Column(Integer, ForeignKey("author.id"), nullable=False, index=True)
+    auteur_id = Column(Integer, ForeignKey("author.id", ondelete="RESTRICT"), nullable=False, index=True)
     
     # Relationships
     auteur = relationship("Author", back_populates="livres")
-    emprunts = relationship("Loan", back_populates="livre")
+    emprunts = relationship("Loan", back_populates="livre", cascade="restrict")
+    
+    # Contraintes
+    __table_args__ = (
+        CheckConstraint('nombre_exemplaires_disponibles <= nombre_exemplaires_total', name='ck_exemplaires_dispo_lte_total'),
+    )
 
 
 class Loan(Base):
@@ -74,10 +83,15 @@ class Loan(Base):
     commentaires = Column(Text, nullable=True)
     
     # Foreign Key
-    livre_id = Column(Integer, ForeignKey("book.id"), nullable=False, index=True)
+    livre_id = Column(Integer, ForeignKey("book.id", ondelete="RESTRICT"), nullable=False, index=True)
     
     # Relationships
     livre = relationship("Book", back_populates="emprunts")
+    
+    # Contraintes
+    __table_args__ = (
+        CheckConstraint('date_retour_effectif IS NULL OR date_retour_effectif >= date_emprunt', name='ck_loan_retour_apres_loan'),
+    )
 
 
 class LoanHistory(Base):
