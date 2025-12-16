@@ -1,26 +1,21 @@
 from fastapi import FastAPI
-from pydantic import BaseModel
+from database import engine
+from models import Base
+from routers import authors, book, loans  
+
+Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
-    title="Mon API",
-    description="API de démonstration Python",
+    title="API Bibliothèque",
+    description="Système de gestion de bibliothèque",
     version="1.0.0"
 )
 
-class Item(BaseModel):
-    name: str
-    description: str | None = None
-    price: float
-    tax: float | None = None
+# Inclusion des routers
+app.include_router(authors.router, prefix="/authors", tags=["Authors"])
+app.include_router(book.router, prefix="/books", tags=["Books"])
+app.include_router(loans.router, prefix="/loans", tags=["Loans"])
 
 @app.get("/")
-def read_root():
-    return {"message": "Bienvenue sur mon API"}
-
-@app.get("/items/{item_id}")
-def read_item(item_id: int, q: str | None = None):
-    return {"item_id": item_id, "q": q}
-
-@app.post("/items/")
-def create_item(item: Item):
-    return {"item": item, "message": "Item créé avec succès"}
+def root():
+    return {"message": "API Bibliothèque "}
