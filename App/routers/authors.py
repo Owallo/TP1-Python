@@ -1,27 +1,17 @@
-from fastapi import FastAPI
+from fastapi import APIRouter
 from pydantic import BaseModel
+from typing import Optional
 
-root = FastAPI(
-    title="Gestion des Livres et Auteurs",
-    description="API TP Python : Bibliothèques",
-    version="1.0.0"
+rooter = APIRouter(
+    prefix="/authors",
+    tags=["/authors"]
 )
 
-class Autheur(BaseModel):
-    id          : int
-    name        : str
-    last_name   : str
-    birth       : str
-    death       : str | None = None
-    country     : int
-    biography   : str | None = None
-    url         : str | None = None
-    
-
-@root.get("/authors/{autheur_id}")
-def read_item(autheur_id: int, name: str | None = None):
+@rooter.get("/{autheur_id}")
+def read_item(autheur_id: int, name: Optional[str] = None):
     return {"Autheur_id": autheur_id, "name": name}
 
-@root.post("/authors/")
-def create_item(autheur: Autheur):
+
+@rooter.post("/")
+def create_item(autheur: A):
     return {"item": autheur, "message": "Item créé avec succès"}
