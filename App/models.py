@@ -1,6 +1,6 @@
 from datetime import datetime
 from sqlalchemy import Column, Integer, String, Text, ForeignKey, DateTime, Date, Enum, CheckConstraint, UniqueConstraint
-from database import Base
+from app.database import Base
 from sqlalchemy.orm import relationship
 import enum
 
@@ -60,7 +60,7 @@ class Book(Base):
     
     # Relationships
     auteur = relationship("Author", back_populates="livres")
-    emprunts = relationship("Loan", back_populates="livre", cascade="restrict")
+    emprunts = relationship("Loan", back_populates="livre")
     
     # Contraintes
     __table_args__ = (

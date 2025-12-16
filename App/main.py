@@ -1,7 +1,7 @@
 from fastapi import FastAPI
-from database import engine
-from models import Base
-from routers import authors, book, loans  
+from app.database import engine
+from app.models import Base
+from app.routers import authors, book, loans  
 
 Base.metadata.create_all(bind=engine)
 
@@ -11,10 +11,10 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# Inclusion des routers
-app.include_router(authors.router, prefix="/authors", tags=["Authors"])
-app.include_router(book.router, prefix="/books", tags=["Books"])
-app.include_router(loans.router, prefix="/loans", tags=["Loans"])
+# # Inclusion des routers
+# app.include_router(authors.root, prefix="/authors", tags=["Authors"])
+# app.include_router(book.root, prefix="/books", tags=["Books"])
+# app.include_router(loans.root, prefix="/loans", tags=["Loans"])
 
 @app.get("/")
 def root():
