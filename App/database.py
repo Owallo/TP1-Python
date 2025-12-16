@@ -1,30 +1,11 @@
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, declarative_base
+from sqlalchemy.orm import sessionmaker
 
-# Base de données SQLite (fichier local)
-SQLALCHEMY_DATABASE_URL = "sqlite:///./bibliotheque.db"
-
-# Création du moteur SQLAlchemy
+# Créer l'engine SQLite
 engine = create_engine(
-    SQLALCHEMY_DATABASE_URL,
-    connect_args={"check_same_thread": False},  # obligatoire pour SQLite
+    "sqlite:///bibliotheque.db",
+    connect_args={"check_same_thread": False}
 )
 
-# Session de base de données
-SessionLocal = sessionmaker(
-    autocommit=False,
-    autoflush=False,
-    bind=engine,
-)
-
-# Classe de base pour les modèles
-Base = declarative_base()
-
-
-# Dépendance FastAPI pour obtenir une session DB
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
+# Créer la session
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)

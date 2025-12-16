@@ -11,11 +11,10 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# Inclusion des routers
-app.include_router(authors.rooter)
-# app.include_router(book.root)
-# app.include_router(loans.root)
+app.include_router(authors.router) 
+app.include_router(book.router)     
+# app.include_router(loans.router)  
 
 @app.get("/")
 def root():
-    return {"message": "API Bibliothèque "}
+    return {"message": "API Bibliothèque"}
