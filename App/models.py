@@ -1,9 +1,10 @@
 from datetime import datetime
-from sqlalchemy import Column, Integer, String, Text, ForeignKey, DateTime, Date, Enum, CheckConstraint, UniqueConstraint
-from app.database import Base
-from sqlalchemy.orm import relationship
+from sqlalchemy import Column, Integer, String, Text, ForeignKey, DateTime, Date, Enum, CheckConstraint, UniqueConstraint, create_engine
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import relationship, sessionmaker, declarative_base
 import enum
 
+Base = declarative_base()
 
 
 class CategorieEnum(str, enum.Enum):
@@ -103,3 +104,8 @@ class LoanHistory(Base):
     nombre_emprunts_total = Column(Integer, nullable=False, default=0)
     duree_moyenne_emprunt = Column(Integer, nullable=True)  # en jours
     popularite = Column(Integer, nullable=False, default=0)
+
+
+engine = create_engine("sqlite:///bibliotheque.db")
+Base.metadata.create_all(engine)
+Session = sessionmaker(bind=engine)
