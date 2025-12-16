@@ -8,18 +8,18 @@ root = FastAPI(
 )
 
 class Livres(BaseModel):
-    id = int
-    titre: str
-    year = str
-    author_id = int 
-    isbn = int
-    nb_livres_dispo : int
-    nb_livres_possedes : int
-    type : str
-    langue : str
-    maison_edit : str
-    nb_pages : int
-    description: str | None = None
+    id                  : int
+    titre               : str
+    year                : str
+    author_id           : int 
+    isbn                : int
+    nb_livres_dispo     : int
+    nb_livres_possedes  : int
+    type                : str
+    langue              : str
+    maison_edit         : str
+    nb_pages            : int
+    description         : str | None = None
 
 @root.get("/books/{books_id}")
 def read_book(id: int, name: str | None = None):
