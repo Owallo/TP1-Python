@@ -11,10 +11,10 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# # Inclusion des routers
-# app.include_router(authors.root, prefix="/authors", tags=["Authors"])
-# app.include_router(book.root, prefix="/books", tags=["Books"])
-# app.include_router(loans.root, prefix="/loans", tags=["Loans"])
+# Inclusion des routers
+app.include_router(authors.rooter)
+# app.include_router(book.root)
+# app.include_router(loans.root)
 
 @app.get("/")
 def root():

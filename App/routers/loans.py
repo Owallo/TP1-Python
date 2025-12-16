@@ -1,11 +1,7 @@
-from fastapi import FastAPI
+from fastapi import APIRouter
 from pydantic import BaseModel
 
-root = FastAPI(
-    title="Gestion des Livres et Auteurs",
-    description="API TP Python : Bibliothèques",
-    version="1.0.0"
-)
+root = APIRouter()
 
 class Loan(BaseModel):
     id                  : int
