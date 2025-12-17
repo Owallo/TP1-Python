@@ -1,3 +1,6 @@
 __pycache__/
 *.py[cod]
 *$py.class
+bibliotheque.db
+app/__pycache__/
+app/routers/__pycache__/
