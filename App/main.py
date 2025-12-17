@@ -13,8 +13,13 @@ app = FastAPI(
 
 app.include_router(authors.router) 
 app.include_router(book.router)     
-# app.include_router(loans.router)  
+app.include_router(loans.router)  
 
 @app.get("/")
 def root():
-    return {"message": "API Bibliothèque"}
+    return {
+        "message": "Bienvenue sur l'API Bibliothèque! 📚\n",
+        "documentation": {
+            "swagger_ui": "http://127.0.0.1:8000/docs",
+        },
+    }
