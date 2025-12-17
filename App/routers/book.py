@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import and_
 from app.database import SessionLocal
 from app.models import Book, Author
+from app.schemas.book import BookGet, BookGet_All
 from typing import Optional
 
 router = APIRouter(
@@ -17,8 +18,7 @@ def get_db():
     finally:
         db.close()
 
-
-@router.get("/")
+@router.get("/", response_model=BookGet_All)
 def get_books(
     page: int = 1, 
     page_size: int = 5,
@@ -56,34 +56,17 @@ def get_books(
     
     # Appliquer pagination
     livres = query.offset(offset).limit(page_size).all()
-    
+    print(livres)
+
     # Calculer les pages
     pages = (total + page_size - 1) // page_size
     
     return {
-        "livres": [
-            {
-                "id": livre.id,
-                "titre": livre.titre,
-                "isbn": livre.isbn,
-                "annee_publication": livre.annee_publication,
-                "auteur": f"{livre.auteur.prenom} {livre.auteur.nom}" if livre.auteur else "Inconnu",
-                "auteur_id": livre.auteur_id,
-                "nombre_exemplaires_disponibles": livre.nombre_exemplaires_disponibles,
-                "nombre_exemplaires_total": livre.nombre_exemplaires_total,
-                "categorie": livre.categorie,
-                "langue": livre.langue
-            } 
-            for livre in livres
-        ],
+        "livres" : livres,
         "page_courante": page,
         "taille_page": page_size,
         "total": total,
-        "pages_totales": pages,
-        "tri": {
-            "sort_by": sort_by,
-            "order": order
-        }
+        "pages_totales": pages
     }
 
 @router.get("/search")
@@ -196,7 +179,7 @@ def search_books(
         "pages_totales": pages
     }
 
-@router.get("/{livre_id}")
+@router.get("/{livre_id}", response_model=BookGet)
 def get_book(livre_id: int, db: Session = Depends(get_db)):
     """Récupérer les détails d'un livre"""
     livre = db.query(Book).filter(Book.id == livre_id).first()
@@ -204,20 +187,7 @@ def get_book(livre_id: int, db: Session = Depends(get_db)):
     if not livre:
         raise HTTPException(status_code=404, detail="Livre non trouvé")
     
-    return {
-        "id": livre.id,
-        "titre": livre.titre,
-        "isbn": livre.isbn,
-        "annee_publication": livre.annee_publication,
-        "auteur": f"{livre.auteur.prenom} {livre.auteur.nom}" if livre.auteur else "Inconnu",
-        "auteur_id": livre.auteur_id,
-        "nombre_exemplaires_disponibles": livre.nombre_exemplaires_disponibles,
-        "nombre_exemplaires_total": livre.nombre_exemplaires_total,
-        "categorie": livre.categorie,
-        "langue": livre.langue,
-        "nombre_pages": livre.nombre_pages,
-        "maison_edition": livre.maison_edition
-    }
+    return livre
 
 @router.post("/")
 def create_book(

@@ -4,6 +4,7 @@ from sqlalchemy import and_
 from typing import Optional
 from datetime import date
 from app.models import Session as SessionLocal, Author
+from app.schemas.author import AuteurGet, AuteurUpdate, AuteurCreate
 
 router = APIRouter(
     prefix="/authors",
@@ -17,11 +18,11 @@ def get_db():
     finally:
         db.close()
  
-@router.get("/")
+@router.get("/", response_model=list[AuteurGet])
 def get_auteur(db: Session = Depends(get_db)):
     # Recherche des auteurs dans la base
     auteur = db.query(Author).all()
-    return {"auteur": [{"id": aut.id, "prenom": aut.prenom, "nom": aut.nom, "livres": aut.livres, "Date de naissance" : aut.date_naissance} for aut in auteur]}
+    return auteur
 
 @router.get("/search")
 def search_authors(
@@ -102,30 +103,19 @@ def search_authors(
         }
     }
  
-@router.get("/{auteur_id}")
+@router.get("/{auteur_id}", response_model=AuteurGet)
 def get_auteur(db: Session = Depends(get_db), auteur_id: int = None):
     auteur = db.query(Author).filter(Author.id == auteur_id).first()
     
     if not auteur:
         raise HTTPException(status_code=404, detail="Auteur non trouvé")
     else:
-        return {
-            "auteur": {
-                "id": auteur.id, 
-                "prenom": auteur.prenom,
-                "nom": auteur.nom, 
-                "livres": auteur.livres, 
-                "Date de naissance" : auteur.date_naissance
-                }
-            }
+        return auteur
  
 @router.put("/{auteur_id}")
 def update_auteur(
-    auteur_id: int,
-    prenom: Optional[str] = None,
-    nom: Optional[str] = None,
-    livre: Optional[str] = None,
-    date_naissance: Optional[str] = None,
+    auteur_id : int,
+    auteur : AuteurUpdate,
     db: Session = Depends(get_db)
 ):
     # Recherche de l'auteur dans la base
@@ -135,14 +125,14 @@ def update_auteur(
         raise HTTPException(status_code=404, detail=f"Aucun auteur trouvé avec l'id : {auteur_id}")
     
     # Mise à jour de l'auteur
-    if prenom:
-        auteur_base.prenom = prenom
-    if nom:
-        auteur_base.nom = nom
-    if livre:
-        auteur_base.livres = livre
-    if date_naissance:
-        auteur_base.date_naissance = date_naissance
+    if auteur.prenom:
+        auteur_base.prenom = auteur.prenom
+    if auteur.nom:
+        auteur_base.nom = auteur.nom
+    # if auteur.livres:
+    #     auteur_base.livres = auteur.livres
+    if auteur.date_naissance:
+        auteur_base.date_naissance = auteur.date_naissance
         
     db.commit()
     db.refresh(auteur_base)
@@ -199,18 +189,15 @@ def delete_auteur(auteur_id: int, db: Session = Depends(get_db)):
 
 @router.post("/")
 def create_auteur(
-    prenom:str = Body(...),
-    nom:str = Body(...),
-    date_naissance:date = Body(...),
-    nationalite :str = Body(...),
+    auteur : AuteurCreate,
     db: Session=Depends(get_db)
 ):
     """Ajouter un nouvel auteur"""
     new_auteur = Author(
-        prenom = prenom,
-        nom = nom,
-        date_naissance = date_naissance,
-        nationalite = nationalite,
+        prenom = auteur.prenom,
+        nom = auteur.nom,
+        date_naissance = auteur.date_naissance,
+        nationalite = auteur.nationalite,
     )
     
     db.add(new_auteur)
