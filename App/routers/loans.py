@@ -1,8 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from typing import Optional
-from app.models import Session as SessionLocal, Loan, Livre
-
+from app.models import Session as SessionLocal, Loan, Book
 router = APIRouter(
     prefix="/loans",
     tags=["/loans"]
