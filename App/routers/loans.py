@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Body
 from sqlalchemy.orm import Session
 from typing import Optional
 from app.models import Session as SessionLocal, Loan, Book
@@ -47,6 +47,7 @@ def update_emprunt(
     date_retour: Optional[str] = None,
     db: Session = Depends(get_db)
 ):
+    """Mettre à jour un emprunt existant"""
     # Recherche de l'emprunt dans la base
     emprunt_base = db.query(Loan).filter(Loan.id == emprunt_id).first()
     
@@ -54,13 +55,13 @@ def update_emprunt(
         raise HTTPException(status_code=404, detail=f"Aucun emprunt trouvé avec l'id : {emprunt_id}")
 
     # Mise à jour de l'emprunt
-    if id_livre:
+    if id_livre is not None:
         emprunt_base.id_livre = id_livre
-    if id_client:
+    if id_client is not None:
         emprunt_base.id_client = id_client
-    if date_emprunt:
+    if date_emprunt is not None:
         emprunt_base.date_emprunt = date_emprunt
-    if date_retour:
+    if date_retour is not None:
         emprunt_base.date_retour = date_retour
 
     db.commit()
@@ -68,7 +69,7 @@ def update_emprunt(
 
     return {
         "statut": "succès",
-        "message": f"L'ouvrage '{emprunt_base.id}' a été mis à jour",
+        "message": f"L'emprunt '{emprunt_base.id}' a été mis à jour",
         "emprunt_modifie": {
             "id": emprunt_base.id,
             "id_livre": emprunt_base.id_livre,
@@ -117,20 +118,18 @@ def delete_emprunt(emprunt_id: int, db: Session = Depends(get_db)):
 
 @router.post("/")
 def create_emprunt(
-    id : int,
-    id_livre : int,
-    id_client : int,
-    date_emprunt : str,
-    date_retour : str,
+    id_livre: int,
+    id_client: int,
+    date_emprunt: str,
+    date_retour: str,
     db: Session = Depends(get_db)
 ):
-    """Ajouter un nouvel emprunt"""
+    """Ajouter un nouvel emprunt (l'id est auto-généré)"""
     new_emprunt = Loan(
-        id = id,
-        id_livre = id_livre,
-        id_client = id_client,
-        date_emprunt = date_emprunt,
-        date_retour = date_retour,
+        id_livre=id_livre,
+        id_client=id_client,
+        date_emprunt=date_emprunt,
+        date_retour=date_retour,
     )
 
     db.add(new_emprunt)
@@ -138,8 +137,9 @@ def create_emprunt(
     db.refresh(new_emprunt)
 
     return {
-        "Retour": "Emprunt ajouté avec succès",
-        "Emprunt_id": new_emprunt.id,
+        "statut": "succès",
+        "message": "Emprunt ajouté avec succès",
+        "emprunt_id": new_emprunt.id,
         "emprunt": {
             "id": new_emprunt.id,
             "id_livre": new_emprunt.id_livre,

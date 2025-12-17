@@ -51,7 +51,6 @@ def get_books(
         else:
             query = query.order_by(Book.annee_publication)
     
-    # Récupérer le total
     total = query.count()
     
     # Appliquer pagination
@@ -164,14 +163,11 @@ def search_books(
     if conditions:
         query = query.filter(and_(*conditions))
     
-    # Compter le total avant pagination
     total = query.count()
     
-    # Pagination
     offset = (page - 1) * page_size
     livres = query.offset(offset).limit(page_size).all()
     
-    # Calculer les pages
     pages = (total + page_size - 1) // page_size
     
     return {
@@ -244,9 +240,6 @@ def create_book(
     if existing_book:
         raise HTTPException(status_code=400, detail="Un livre avec cet ISBN existe déjà")
     
-    # Si nombre_exemplaires_disponibles n'est pas fourni, on utilise le total
-    if nombre_exemplaires_disponibles is None:
-        nombre_exemplaires_disponibles = nombre_exemplaires_total
     
     # Vérifier la contrainte
     if nombre_exemplaires_disponibles > nombre_exemplaires_total:
@@ -273,6 +266,7 @@ def create_book(
     db.refresh(new_livre)
     
     return {
+        "statut": "succès",
         "message": "Livre ajouté avec succès",
         "livre_id": new_livre.id,
         "livre": {
@@ -347,6 +341,7 @@ def update_book(
     db.refresh(livre)
     
     return {
+        "statut": "succès",
         "message": f"Livre {livre_id} mis à jour avec succès",
         "livre": {
             "id": livre.id,
@@ -366,7 +361,10 @@ def delete_book(livre_id: int, db: Session = Depends(get_db)):
     try:
         db.delete(livre)
         db.commit()
-        return {"message": f"Livre {livre_id} supprimé avec succès"}
+        return {
+            "statut": "succès",
+            "message": f"Livre {livre_id} supprimé avec succès"
+        }
     except Exception as e:
         db.rollback()
         raise HTTPException(

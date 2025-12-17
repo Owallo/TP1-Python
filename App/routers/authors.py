@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, Body
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy import and_
 from typing import Optional
@@ -124,38 +124,39 @@ def update_auteur(
     auteur_id: int,
     prenom: Optional[str] = None,
     nom: Optional[str] = None,
-    livre: Optional[str] = None,
     date_naissance: Optional[str] = None,
+    nationalite: Optional[str] = None,
     db: Session = Depends(get_db)
 ):
+    """Mettre à jour un auteur existant"""
     # Recherche de l'auteur dans la base
-    auteur_base= db.query(Author).filter(Author.id == auteur_id).first()
+    auteur_base = db.query(Author).filter(Author.id == auteur_id).first()
     
     if auteur_base is None:
         raise HTTPException(status_code=404, detail=f"Aucun auteur trouvé avec l'id : {auteur_id}")
     
     # Mise à jour de l'auteur
-    if prenom:
+    if prenom is not None:
         auteur_base.prenom = prenom
-    if nom:
+    if nom is not None:
         auteur_base.nom = nom
-    if livre:
-        auteur_base.livres = livre
-    if date_naissance:
+    if date_naissance is not None:
         auteur_base.date_naissance = date_naissance
+    if nationalite is not None:
+        auteur_base.nationalite = nationalite
         
     db.commit()
     db.refresh(auteur_base)
     
     return {
         "statut": "succès",
-        "message": f"L'ouvrage '{auteur_base.prenom}' a été mis à jour",
+        "message": f"L'auteur '{auteur_base.prenom} {auteur_base.nom}' a été mis à jour",
         "auteur_modifie": {
             "id": auteur_base.id,
             "prenom": auteur_base.prenom,
             "nom": auteur_base.nom,
-            "livres": auteur_base.livres,
-            "date_naissance": auteur_base.date_naissance
+            "date_naissance": auteur_base.date_naissance,
+            "nationalite": auteur_base.nationalite
         }
     }
 
@@ -199,18 +200,18 @@ def delete_auteur(auteur_id: int, db: Session = Depends(get_db)):
 
 @router.post("/")
 def create_auteur(
-    prenom:str = Body(...),
-    nom:str = Body(...),
-    date_naissance:date = Body(...),
-    nationalite :str = Body(...),
-    db: Session=Depends(get_db)
+    prenom: str,
+    nom: str,
+    date_naissance: str,
+    nationalite: str,
+    db: Session = Depends(get_db)
 ):
     """Ajouter un nouvel auteur"""
     new_auteur = Author(
-        prenom = prenom,
-        nom = nom,
-        date_naissance = date_naissance,
-        nationalite = nationalite,
+        prenom=prenom,
+        nom=nom,
+        date_naissance=date_naissance,
+        nationalite=nationalite,
     )
     
     db.add(new_auteur)
@@ -218,8 +219,9 @@ def create_auteur(
     db.refresh(new_auteur)
     
     return {
-        "Retour": "Auteur ajouté avec succès",
-        "Auteur_id": new_auteur.id,
+        "statut": "succès",
+        "message": "Auteur ajouté avec succès",
+        "auteur_id": new_auteur.id,
         "auteur": {
             "id": new_auteur.id,
             "prenom": new_auteur.prenom,
