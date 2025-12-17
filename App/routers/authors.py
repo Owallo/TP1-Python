@@ -1,8 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException, Body
 from sqlalchemy.orm import Session
-from typing import Optional
+from typing import Optional, List
 from datetime import date
 from app.models import Session as SessionLocal, Author
+from app.schemas.author import AuteurCreate, AuteurGet
 
 router = APIRouter(
     prefix="/authors",
@@ -15,30 +16,26 @@ def get_db():
         yield db
     finally:
         db.close()
- 
-@router.get("/")
-def get_auteur(db: Session = Depends(get_db)):
+        
+ #, response_model=List[AuteurGet]
+@router.get("/", response_model=List[AuteurGet])
+def get_auteurs(db: Session = Depends(get_db)):
     # Recherche des auteurs dans la base
     auteur = db.query(Author).all()
-    return {"auteur": [{"id": aut.id, "prenom": aut.prenom, "nom": aut.nom, "livres": aut.livres, "Date de naissance" : aut.date_naissance} for aut in auteur]}
- 
+    return [{"id": aut.id, "prenom": aut.prenom,"nom": aut.nom,"nationalite": aut.nationalite} for aut in auteur]
+          #   """livres": aut.livres,"""#,"date_naissance": aut.date_naissance} for aut in auteur]
+          #   """livres": aut.livres,"""
+
+#, response_model=AuteurGet
 @router.get("/{auteur_id}")
-def get_auteur(db: Session = Depends(get_db), auteur_id: int = None):
+def get_auteur(auteur_id: int = None, db: Session = Depends(get_db)):
+    # Recherche des auteurs dans la base
     auteur = db.query(Author).filter(Author.id == auteur_id).first()
-    
     if not auteur:
         raise HTTPException(status_code=404, detail="Auteur non trouvé")
-    else:
-        return {
-            "auteur": {
-                "id": auteur.id, 
-                "prenom": auteur.prenom,
-                "nom": auteur.nom, 
-                "livres": auteur.livres, 
-                "Date de naissance" : auteur.date_naissance
-                }
-            }
- 
+    #return auteur
+    return {"id": auteur.id, "prenom": auteur.prenom,"nom": auteur.nom,"nationalite": auteur.nationalite,"date_naissance": auteur.date_naissance}
+
 @router.put("/{auteur_id}")
 def update_auteur(
     auteur_id: int,
@@ -119,24 +116,21 @@ def delete_auteur(auteur_id: int, db: Session = Depends(get_db)):
 
 @router.post("/")
 def create_auteur(
-    prenom:str = Body(...),
-    nom:str = Body(...),
-    date_naissance:date = Body(...),
-    nationalite :str = Body(...),
-    db: Session=Depends(get_db)
+    auteur: AuteurCreate = Body(...),
+    db: Session = Depends(get_db)
 ):
-    """Ajouter un nouvel auteur"""
+    """Ajouter un nouvel auteur (le corps est validé par `AuteurCreate`)."""
     new_auteur = Author(
-        prenom = prenom,
-        nom = nom,
-        date_naissance = date_naissance,
-        nationalite = nationalite,
+        prenom = auteur.prenom,
+        nom = auteur.nom,
+        date_naissance = auteur.date_naissance,
+        nationalite = auteur.nationalite,
     )
-    
+
     db.add(new_auteur)
     db.commit()
     db.refresh(new_auteur)
-    
+
     return {
         "Retour": "Auteur ajouté avec succès",
         "Auteur_id": new_auteur.id,

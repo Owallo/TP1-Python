@@ -1,7 +1,8 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Body
 from sqlalchemy.orm import Session
-from typing import Optional
+from typing import Optional, List
 from app.models import Session as SessionLocal, Loan, Book
+from app.schemas.loans import LoansCreate, LoansUpdate, LoansGet
 
 router = APIRouter(
     prefix="/loans",
@@ -15,36 +16,50 @@ def get_db():
     finally:
         db.close()
  
-@router.get("/")
+@router.get("/", response_model=List[LoansGet])
 def get_emprunt(db: Session = Depends(get_db)):
     # Recherche des emprunts dans la base
-    emprunt = db.query(Loan).all()
-    return {"emprunt": [{"id": em.id, "id_livre": em.id_livre, "id_client": em.id_client, "date_emprunt": em.date_emprunt, "date_retour": em.date_retour} for em in emprunt]}
+    emprunts = db.query(Loan).all()
+    return [
+        {
+            "id": em.id,
+            "nom_emprunteur": em.nom_emprunteur,
+            "email_emprunteur": em.email_emprunteur,
+            "numero_carte_bibliotheque": em.numero_carte_bibliotheque,
+            "date_emprunt": em.date_emprunt,
+            "date_limite_retour": em.date_limite_retour,
+            "date_retour_effectif": em.date_retour_effectif,
+            "statut": em.statut,
+            "commentaires": em.commentaires,
+            "livre_id": em.livre_id,
+        }
+        for em in emprunts
+    ]
  
-@router.get("/{emprunt_id}")
+@router.get("/{emprunt_id}", response_model=LoansGet)
 def get_emprunt(db: Session = Depends(get_db), emprunt_id: int = None):
     emprunt = db.query(Loan).filter(Loan.id == emprunt_id).first()
-    
+
     if not emprunt:
         raise HTTPException(status_code=404, detail="Emprunt non trouvé")
-    else:
-        return {
-            "emprunt": [{
-                "id": em.id,
-                "id_livre": em.id_livre,
-                "id_client": em.id_client,
-                "date_emprunt": em.date_emprunt,
-                "date_retour": em.date_retour
-            } for em in emprunt]
-        }
+
+    return {
+        "id": emprunt.id,
+        "nom_emprunteur": emprunt.nom_emprunteur,
+        "email_emprunteur": emprunt.email_emprunteur,
+        "numero_carte_bibliotheque": emprunt.numero_carte_bibliotheque,
+        "date_emprunt": emprunt.date_emprunt,
+        "date_limite_retour": emprunt.date_limite_retour,
+        "date_retour_effectif": emprunt.date_retour_effectif,
+        "statut": emprunt.statut,
+        "commentaires": emprunt.commentaires,
+        "livre_id": emprunt.livre_id,
+    }
  
 @router.put("/{emprunt_id}")
 def update_emprunt(
     emprunt_id: int,
-    id_livre: Optional[int] = None,
-    id_client: Optional[int] = None,
-    date_emprunt: Optional[str] = None,
-    date_retour: Optional[str] = None,
+    emprunt: LoansUpdate = Body(...),
     db: Session = Depends(get_db)
 ):
     # Recherche de l'emprunt dans la base
@@ -54,14 +69,24 @@ def update_emprunt(
         raise HTTPException(status_code=404, detail=f"Aucun emprunt trouvé avec l'id : {emprunt_id}")
 
     # Mise à jour de l'emprunt
-    if id_livre:
-        emprunt_base.id_livre = id_livre
-    if id_client:
-        emprunt_base.id_client = id_client
-    if date_emprunt:
-        emprunt_base.date_emprunt = date_emprunt
-    if date_retour:
-        emprunt_base.date_retour = date_retour
+    if emprunt.livre_id is not None:
+        emprunt_base.livre_id = emprunt.livre_id
+    if emprunt.nom_emprunteur is not None:
+        emprunt_base.nom_emprunteur = emprunt.nom_emprunteur
+    if emprunt.email_emprunteur is not None:
+        emprunt_base.email_emprunteur = emprunt.email_emprunteur
+    if emprunt.numero_carte_bibliotheque is not None:
+        emprunt_base.numero_carte_bibliotheque = emprunt.numero_carte_bibliotheque
+    if emprunt.date_emprunt is not None:
+        emprunt_base.date_emprunt = emprunt.date_emprunt
+    if emprunt.date_limite_retour is not None:
+        emprunt_base.date_limite_retour = emprunt.date_limite_retour
+    if emprunt.date_retour_effectif is not None:
+        emprunt_base.date_retour_effectif = emprunt.date_retour_effectif
+    if emprunt.statut is not None:
+        emprunt_base.statut = emprunt.statut
+    if emprunt.commentaires is not None:
+        emprunt_base.commentaires = emprunt.commentaires
 
     db.commit()
     db.refresh(emprunt_base)
@@ -117,20 +142,21 @@ def delete_emprunt(emprunt_id: int, db: Session = Depends(get_db)):
 
 @router.post("/")
 def create_emprunt(
-    id : int,
-    id_livre : int,
-    id_client : int,
-    date_emprunt : str,
-    date_retour : str,
+    emprunt: LoansCreate = Body(...),
     db: Session = Depends(get_db)
 ):
-    """Ajouter un nouvel emprunt"""
+    """Ajouter un nouvel emprunt (body validé par `LoansCreate`)."""
     new_emprunt = Loan(
-        id = id,
-        id_livre = id_livre,
-        id_client = id_client,
-        date_emprunt = date_emprunt,
-        date_retour = date_retour,
+        id = emprunt.id,
+        nom_emprunteur = emprunt.nom_emprunteur,
+        email_emprunteur = emprunt.email_emprunteur,
+        numero_carte_bibliotheque = emprunt.numero_carte_bibliotheque,
+        date_emprunt = emprunt.date_emprunt,
+        date_limite_retour = emprunt.date_limite_retour,
+        date_retour_effectif = emprunt.date_retour_effectif,
+        statut = emprunt.statut,
+        commentaires = emprunt.commentaires,
+        livre_id = emprunt.livre_id,
     )
 
     db.add(new_emprunt)
@@ -142,9 +168,14 @@ def create_emprunt(
         "Emprunt_id": new_emprunt.id,
         "emprunt": {
             "id": new_emprunt.id,
-            "id_livre": new_emprunt.id_livre,
-            "id_client": new_emprunt.id_client,
+            "nom_emprunteur": new_emprunt.nom_emprunteur,
+            "email_emprunteur": new_emprunt.email_emprunteur,
+            "numero_carte_bibliotheque": new_emprunt.numero_carte_bibliotheque,
             "date_emprunt": new_emprunt.date_emprunt,
-            "date_retour": new_emprunt.date_retour
+            "date_limite_retour": new_emprunt.date_limite_retour,
+            "date_retour_effectif": new_emprunt.date_retour_effectif,
+            "statut": new_emprunt.statut,
+            "commentaires": new_emprunt.commentaires,
+            "livre_id": new_emprunt.livre_id,
         }
     }

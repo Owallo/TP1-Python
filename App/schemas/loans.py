@@ -29,4 +29,16 @@ class LoansDelete(BaseModel):
     pass
 
 class LoansGet(BaseModel):
-    id: int = Field(..., ge=1)
+    id: int
+    nom_emprunteur: str
+    email_emprunteur: EmailStr
+    numero_carte_bibliotheque: str
+    date_emprunt: datetime
+    date_limite_retour: datetime
+    date_retour_effectif: Optional[datetime] = None
+    statut: str
+    commentaires: Optional[str] = None
+    livre_id: int
+
+    class Config:
+        from_attributes = True

@@ -26,11 +26,11 @@ class Author(Base):
     """Modèle Auteur"""
     __tablename__ = "author"
 
-    id = Column(Integer, primary_key=True, index=True)
-    prenom = Column(String(100), nullable=False)
-    nom = Column(String(100), nullable=False)
-    date_naissance = Column(Date, nullable=False)
-    nationalite = Column(String(2), nullable=False)  # Code ISO
+    id= Column(Integer, primary_key=True, index=True)
+    prenom= Column(String(100), nullable=False)
+    nom= Column(String(100), nullable=False)
+    date_naissance= Column(Date, nullable=False)
+    nationalite= Column(String(2), nullable=False)  # Code ISO
     
     # Relationships
     livres = relationship("Book", back_populates="auteur")
