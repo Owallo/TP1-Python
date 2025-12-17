@@ -30,13 +30,13 @@ def get_auteur(db: Session = Depends(get_db), auteur_id: int = None):
         raise HTTPException(status_code=404, detail="Auteur non trouvé")
     else:
         return {
-            "auteur": [{
-                "id": aut.id, 
-                "prenom": aut.prenom,
-                "nom": aut.nom, 
-                "livres": aut.livres, 
-                "Date de naissance" : aut.date_naissance
-                } for aut in auteur]
+            "auteur": {
+                "id": auteur.id, 
+                "prenom": auteur.prenom,
+                "nom": auteur.nom, 
+                "livres": auteur.livres, 
+                "Date de naissance" : auteur.date_naissance
+                }
             }
  
 @router.put("/{auteur_id}")
