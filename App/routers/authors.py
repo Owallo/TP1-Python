@@ -44,7 +44,7 @@ def update_auteur(
     prenom: Optional[str] = None,
     nom: Optional[str] = None,
     livre: Optional[str] = None,
-    date_naissance: Optional[int] = None,
+    date_naissance: Optional[str] = None,
     db: Session = Depends(get_db)
 ):
     # Recherche de l'auteur dans la base
