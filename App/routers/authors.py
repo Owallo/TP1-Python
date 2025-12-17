@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, Body
 from sqlalchemy.orm import Session
+from sqlalchemy import and_
 from typing import Optional
 from datetime import date
 from app.models import Session as SessionLocal, Author
@@ -21,6 +22,85 @@ def get_auteur(db: Session = Depends(get_db)):
     # Recherche des auteurs dans la base
     auteur = db.query(Author).all()
     return {"auteur": [{"id": aut.id, "prenom": aut.prenom, "nom": aut.nom, "livres": aut.livres, "Date de naissance" : aut.date_naissance} for aut in auteur]}
+
+@router.get("/search")
+def search_authors(
+    page: int = 1,
+    page_size: int = 5,
+    nom: Optional[str] = None,
+    nationalite: Optional[str] = None,
+    sort_by: str = "nom",
+    order: str = "asc",
+    db: Session = Depends(get_db)
+):
+    """
+    Recherche d'auteurs avec filtres et pagination
+    
+    Paramètres:
+    - nom: recherche partielle par prénom ou nom (insensible à la casse)
+    - nationalite: recherche exacte par code ISO
+    - sort_by: tri par 'nom' ou 'date_naissance' (défaut: nom)
+    - order: 'asc' (croissant) ou 'desc' (décroissant) (défaut: asc)
+    - page, page_size: pagination
+    """
+    conditions = []
+    
+    if nom:
+        conditions.append(
+            (Author.nom(f"%{nom}%")) | (Author.prenom(f"%{nom}%"))
+        )
+    
+    # Recherche par nationalité 
+    if nationalite:
+        conditions.append(Author.nationalite == nationalite)
+    
+    query = db.query(Author)
+    
+    # Appliquer les filtres
+    if conditions:
+        query = query.filter(and_(*conditions))
+    
+    # Tri
+    if sort_by == "nom":
+        if order == "desc":
+            query = query.order_by(Author.nom.desc())
+        else:
+            query = query.order_by(Author.nom)
+    elif sort_by == "date_naissance":
+        if order == "desc":
+            query = query.order_by(Author.date_naissance.desc())
+        else:
+            query = query.order_by(Author.date_naissance)
+    
+    total = query.count()
+    
+    # Pagination
+    offset = (page - 1) * page_size
+    auteurs = query.offset(offset).limit(page_size).all()
+    
+    pages = (total + page_size - 1) // page_size
+    
+    return {
+        "auteurs": [
+            {
+                "id": aut.id,
+                "prenom": aut.prenom,
+                "nom": aut.nom,
+                "date_naissance": aut.date_naissance,
+                "nationalite": aut.nationalite,
+                "livres": aut.livres
+            }
+            for aut in auteurs
+        ],
+        "page_courante": page,
+        "taille_page": page_size,
+        "total": total,
+        "pages_totales": pages,
+        "tri": {
+            "sort_by": sort_by,
+            "order": order
+        }
+    }
  
 @router.get("/{auteur_id}")
 def get_auteur(db: Session = Depends(get_db), auteur_id: int = None):

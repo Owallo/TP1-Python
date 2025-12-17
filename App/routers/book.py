@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
+from sqlalchemy import and_
 from app.database import SessionLocal
 from app.models import Book, Author
 from typing import Optional
@@ -16,15 +17,48 @@ def get_db():
     finally:
         db.close()
 
+
 @router.get("/")
-def get_books(page: int = 1, db: Session = Depends(get_db)):
-    """Récupérer la liste des livres avec pagination"""
-    per_page = 5
-    offset = (page - 1) * per_page
+def get_books(
+    page: int = 1, 
+    page_size: int = 5,
+    sort_by: str = "titre",
+    order: str = "asc",
+    db: Session = Depends(get_db)
+):
+    """
+    Récupérer la liste des livres avec pagination et tri
     
-    livres = db.query(Book).offset(offset).limit(per_page).all()
-    total = db.query(Book).count()
-    pages = (total + per_page - 1) // per_page
+    Paramètres:
+    - page: numéro de page (défaut: 1)
+    - page_size: nombre de livres par page (défaut: 5)
+    - sort_by: trier par 'titre', 'auteur', 'annee_publication' ou 'popularite' (défaut: titre)
+    - order: 'asc' (croissant) ou 'desc' (décroissant) (défaut: asc)
+    """
+    # Pagination
+    offset = (page - 1) * page_size
+    query = db.query(Book)
+    
+    # Tri simple
+    if sort_by == "titre":
+        if order == "desc":
+            query = query.order_by(Book.titre.desc())
+        else:
+            query = query.order_by(Book.titre)
+    elif sort_by == "annee_publication":
+        if order == "desc":
+            query = query.order_by(Book.annee_publication.desc())
+        else:
+            query = query.order_by(Book.annee_publication)
+    
+    # Récupérer le total
+    total = query.count()
+    
+    # Appliquer pagination
+    livres = query.offset(offset).limit(page_size).all()
+    
+    # Calculer les pages
+    pages = (total + page_size - 1) // page_size
     
     return {
         "livres": [
@@ -42,9 +76,124 @@ def get_books(page: int = 1, db: Session = Depends(get_db)):
             } 
             for livre in livres
         ],
-        "page": page,
+        "page_courante": page,
+        "taille_page": page_size,
         "total": total,
-        "pages": pages
+        "pages_totales": pages,
+        "tri": {
+            "sort_by": sort_by,
+            "order": order
+        }
+    }
+
+@router.get("/search")
+def search_books(
+    page: int = 1,
+    page_size: int = 5,
+    titre: Optional[str] = None,
+    auteur: Optional[str] = None,
+    isbn: Optional[str] = None,
+    categorie: Optional[str] = None,
+    annee: Optional[int] = None,
+    annee_min: Optional[int] = None,
+    annee_max: Optional[int] = None,
+    langue: Optional[str] = None,
+    disponible: Optional[bool] = None,
+    db: Session = Depends(get_db)
+):
+    """
+    Recherche avancée de livres avec filtres multiples (combinaison ET)
+    
+    Paramètres:
+    - titre: recherche partielle insensible à la casse
+    - auteur: recherche par nom/prénom (partielle)
+    - isbn: recherche exacte
+    - categorie: recherche exacte
+    - annee: année exacte
+    - annee_min/annee_max: plage d'années
+    - langue: recherche exacte
+    - disponible: True si disponible, False si non disponible
+    - page, page_size: pagination
+    """
+    conditions = []
+    
+    if titre:
+        conditions.append(Book.titre(f"%{titre}%"))
+    
+    # Recherche par auteur (nom ou prénom)
+    if auteur:
+        conditions.append(
+            Book.auteur.has(
+                Author.nom(f"%{auteur}%") | Author.prenom(f"%{auteur}%")
+            )
+        )
+    
+    # Recherche par ISBN exact
+    if isbn:
+        conditions.append(Book.isbn == isbn)
+    
+    # Recherche par catégorie exacte
+    if categorie:
+        conditions.append(Book.categorie == categorie)
+    
+    # Recherche par année exacte
+    if annee:
+        conditions.append(Book.annee_publication == annee)
+    
+    # Recherche par plage d'années
+    if annee_min:
+        conditions.append(Book.annee_publication >= annee_min)
+    if annee_max:
+        conditions.append(Book.annee_publication <= annee_max)
+    
+    # Recherche par langue exacte
+    if langue:
+        conditions.append(Book.langue == langue)
+    
+    # Filtrage par disponibilité
+    if disponible is not None:
+        if disponible:
+            # Livres disponibles (au moins 1 exemplaire)
+            conditions.append(Book.nombre_exemplaires_disponibles > 0)
+        else:
+            # Livres non disponibles (0 exemplaire)
+            conditions.append(Book.nombre_exemplaires_disponibles == 0)
+    
+    # Combiner toutes les conditions avec ET
+    query = db.query(Book)
+    if conditions:
+        query = query.filter(and_(*conditions))
+    
+    # Compter le total avant pagination
+    total = query.count()
+    
+    # Pagination
+    offset = (page - 1) * page_size
+    livres = query.offset(offset).limit(page_size).all()
+    
+    # Calculer les pages
+    pages = (total + page_size - 1) // page_size
+    
+    return {
+        "livres": [
+            {
+                "id": livre.id,
+                "titre": livre.titre,
+                "isbn": livre.isbn,
+                "annee_publication": livre.annee_publication,
+                "auteur": f"{livre.auteur.prenom} {livre.auteur.nom}" if livre.auteur else "Inconnu",
+                "auteur_id": livre.auteur_id,
+                "nombre_exemplaires_disponibles": livre.nombre_exemplaires_disponibles,
+                "nombre_exemplaires_total": livre.nombre_exemplaires_total,
+                "categorie": livre.categorie,
+                "langue": livre.langue
+            } 
+            for livre in livres
+        ],
+        "page_courante": page,
+        "taille_page": page_size,
+        "total": total,
+        "pages_totales": pages
     }
 
 @router.get("/{livre_id}")
