@@ -35,8 +35,10 @@ def db_session():
     
 def test_create_author(client, sample_author):
     """Test de la création d'un auteur."""
-    response = client.post("/authors/add", params=sample_author)
+    response = client.post("/authors/add", json=sample_author)
+    print(f"Status: {response.status_code}")
+    print(f"Response: {response.json()}")
     assert response.status_code == 200
     data = response.json()
     assert "auteur_id" in data
-    assert data["message"] == "Auteur ajouté avec succès."
+    assert data["message"] == "Auteur ajouté avec succès"
