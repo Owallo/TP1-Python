@@ -1,25 +1,24 @@
 # API Bibliothèque 📚
 
-Système de gestion de bibliothèque REST API construit avec FastAPI et SQLAlchemy.
+Système complet de gestion de bibliothèque REST API construit avec **FastAPI** et **SQLAlchemy**, permettant la gestion des auteurs, livres et emprunts.
 
-## Fonctionnalités
+## ✨ Fonctionnalités
 
-- ✅ Gestion des auteurs (CRUD)
-- ✅ Gestion des livres 
-- ✅ Gestion des emprunts
-- ✅ Historique des emprunts
-- ✅ Base de données SQLite
+- ✅ **CRUD complet** pour auteurs, livres et emprunts
+- ✅ **Validation des données** avec Pydantic
+- ✅ **Recherche avancée** sans schéma
+- ✅ **Historique des emprunts**
+- ✅ **Base de données** SQLite
+- ✅ **Documentation auto-générée** (Swagger & ReDoc)
 
-## Installation
+## 🚀 Installation
 
 ### Prérequis
-- Python 3.8+
-- pip
+- Python 3.9+
+- pip 
+- Git
 
-### Important ⚠️
-Renommer le dossier `App` en `app` (minuscules) pour éviter les problèmes
-
-### Étapes
+### Étapes d'installation
 
 1. **Cloner le projet**
 ```bash
@@ -39,77 +38,92 @@ source .venv/bin/activate  # Linux/macOS
 pip install -r requirement.txt
 ```
 
-## Utilisation
+## 🎯 Utilisation
 
 ### Démarrer le serveur
 ```bash
 uvicorn app.main:app --reload
 ```
 
-L'API sera disponible sur: `http://127.0.0.1:8000`
+Le serveur démarre sur: **http://127.0.0.1:8000**
 
-### Documentation interactive
-- Swagger UI: `http://127.0.0.1:8000/docs`
-- ReDoc: `http://127.0.0.1:8000/redoc`
+### 📖 Documentation interactive
+- **Swagger UI**: http://127.0.0.1:8000/docs (recommandé)
+- **ReDoc**: http://127.0.0.1:8000/redoc
 
-## Structure du projet
+## 📁 Structure du projet
 
 ```
 TP1-Python/
 ├── app/
 │   ├── __init__.py
-│   ├── main.py              # Point d'entrée FastAPI
-│   ├── models.py            # Modèles SQLAlchemy
-│   ├── database.py          # Configuration BD
+│   ├── main.py              # Application FastAPI principale
+│   ├── models.py            # Modèles SQLAlchemy (ORM)
+│   ├── database.py          # Configuration base de données
 │   ├── routers/
-│   │   ├── authors.py       # Endpoints auteurs
-│   │   ├── book.py          # Endpoints livres
-│   │   └── loans.py         # Endpoints emprunts
+│   │   ├── __init__.py
+│   │   ├── authors.py       # Endpoints gestion auteurs
+│   │   ├── book.py          # Endpoints gestion livres
+│   │   └── loans.py         # Endpoints gestion emprunts
 │   └── schemas/
-│       └── item.py          # Schémas Pydantic
-├── requirement.txt          # Dépendances
-└── README.MD                # Ce fichier
+│       ├── __init__.py
+│       ├── author.py        # Schémas Pydantic auteurs
+│       ├── book.py          # Schémas Pydantic livres
+│       ├── loans.py         # Schémas Pydantic emprunts
+│       └── item.py
+├── requirement.txt          # Dépendances du projet
+├── .gitignore              # Fichiers ignorés par Git
+└── README.MD               # Ce fichier
 ```
 
-## Endpoints
+## 🔌 Endpoints API
 
-### Auteurs
-- `GET /authors/` - Lister tous les auteurs
-- `GET /authors/{id}` - Obtenir un auteur par ID
-- `POST /authors/` - Créer un nouvel auteur
-- `PUT /authors/{id}` - Mettre à jour un auteur
-- `DELETE /authors/{id}` - Supprimer un auteur
+### 👥 Auteurs
+| Méthode | Endpoint | Description |
+|---------|----------|-------------|
+| GET | `/authors/` | Lister tous les auteurs |
+| GET | `/authors/{id}` | Obtenir un auteur par ID |
+| POST | `/authors/` | Créer un nouvel auteur |
+| PUT | `/authors/{id}` | Mettre à jour un auteur |
+| DELETE | `/authors/{id}` | Supprimer un auteur |
 
-### Livres
-- `GET /books/` - Lister tous les livres
-- `GET /books/{id}` - Obtenir un livre par ID
-- `POST /books/` - Créer un livre
-- `PUT /books/{id}` - Mettre à jour un livre
-- `DELETE /books/{id}` - Supprimer un livre
+### 📚 Livres
+| Méthode | Endpoint | Description |
+|---------|----------|-------------|
+| GET | `/books/` | Lister tous les livres |
+| GET | `/books/{id}` | Obtenir un livre par ID |
+| POST | `/books/` | Créer un livre |
+| PUT | `/books/{id}` | Mettre à jour un livre |
+| DELETE | `/books/{id}` | Supprimer un livre |
 
-### Emprunts
-- `GET /loans/` - Lister tous les emprunts
-- `POST /loans/` - Créer un emprunt
-- `PUT /loans/{id}` - Mettre à jour un emprunt
+### 🔄 Emprunts
+| Méthode | Endpoint | Description |
+|---------|----------|-------------|
+| GET | `/loans/` | Lister tous les emprunts |
+| GET | `/loans/{id}` | Obtenir un emprunt par ID |
+| POST | `/loans/` | Créer un emprunt |
+| PUT | `/loans/{id}` | Mettre à jour un emprunt |
+| DELETE | `/loans/{id}` | Supprimer un emprunt |
 
-## Technologies utilisées
+## 🛠️ Technologies utilisées
 
-- **FastAPI** - Framework web moderne pour APIs REST
-- **Uvicorn** - Serveur ASGI
-- **SQLAlchemy** - ORM Python
-- **Pydantic** - Validation de données
-- **SQLite** - Base de données
-- **Alembic** - Gestion des migrations BD
-- **python-dotenv** - Gestion des variables d'environnement
+| Technologie | Utilisation |
+|-------------|-------------|
+| **FastAPI** | Framework web moderne pour APIs REST |
+| **Uvicorn** | Serveur ASGI haute performance |
+| **SQLAlchemy** | ORM Python pour la gestion de base de données |
+| **Pydantic** | Validation et sérialisation de données |
+| **SQLite** | Base de données légère |
+| **Alembic** | Gestion des migrations de schéma |
+| **python-dotenv** | Gestion des variables d'environnement |
 
-## Développement
+## 📝 Notes
 
-### Variables d'environnement
-Créer un fichier `.env` à la racine:
-```
-DATABASE_URL=sqlite:///bibliotheque.db
-```
+- La base de données est stockée dans `bibliotheque.db`
+- Les fichiers cache Python (`__pycache__/`) sont ignorés par Git
+- Utilisez Swagger UI pour tester l'API en développement
 
-## Licence
+## 👨‍💻 Contributeurs
 
-MIT
+- **Owallo** - Développeur principal
+- **AnthonyRSA69** - Développeur principal
