@@ -77,9 +77,9 @@ class Loan(Base):
     nom_emprunteur = Column(String(255), nullable=False)
     email_emprunteur = Column(String(255), nullable=False)
     numero_carte_bibliotheque = Column(String(50), unique=True, nullable=False, index=True)
-    date_emprunt = Column(DateTime, nullable=False, default=datetime.utcnow)
-    date_limite_retour = Column(DateTime, nullable=False)
-    date_retour_effectif = Column(DateTime, nullable=True)
+    date_emprunt = Column(Date, nullable=False, default=datetime.utcnow)
+    date_limite_retour = Column(Date, nullable=False)
+    date_retour_effectif = Column(Date, nullable=True)
     statut = Column(String(20), nullable=False)  # StatutEmpruntEnum
     commentaires = Column(Text, nullable=True)
     

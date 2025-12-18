@@ -8,7 +8,7 @@ from app.schemas.author import AuteurGet, AuteurUpdate, AuteurCreate
 
 router = APIRouter(
     prefix="/authors",
-    tags=["/authors"]
+    tags=["Auteurs"]
 )
  
 def get_db():
@@ -188,7 +188,7 @@ def delete_auteur(auteur_id: int, db: Session = Depends(get_db)):
             )
         )
 
-@router.post("/")
+@router.post("/add")
 def create_auteur(
     auteur : AuteurCreate,
     db: Session = Depends(get_db)
