@@ -11,7 +11,7 @@ app = FastAPI(
     version="1.0.0"
 )
 
-app.include_router(authors.router) 
+#app.include_router(authors.router) 
 app.include_router(book.router)     
 app.include_router(loans.router)  
 
