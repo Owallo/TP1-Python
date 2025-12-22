@@ -154,21 +154,7 @@ def search_books(
     pages = (total + page_size - 1) // page_size
     
     return {
-        "livres": [
-            {
-                "id": livre.id,
-                "titre": livre.titre,
-                "isbn": livre.isbn,
-                "annee_publication": livre.annee_publication,
-                "auteur": f"{livre.auteur.prenom} {livre.auteur.nom}" if livre.auteur else "Inconnu",
-                "auteur_id": livre.auteur_id,
-                "nombre_exemplaires_disponibles": livre.nombre_exemplaires_disponibles,
-                "nombre_exemplaires_total": livre.nombre_exemplaires_total,
-                "categorie": livre.categorie,
-                "langue": livre.langue
-            } 
-            for livre in livres
-        ],
+        "livres": livres,
         "page_courante": page,
         "taille_page": page_size,
         "total": total,
@@ -185,7 +171,7 @@ def get_book(livre_id: int, db: Session = Depends(get_db)):
     
     return livre
 
-@router.post("/add")
+@router.post("/add", response_model=BookGet)
 def create_book(
     livre: BookCreate,
     db: Session = Depends(get_db)
@@ -226,18 +212,9 @@ def create_book(
     db.commit()
     db.refresh(new_livre)
     
-    return {
-        "statut": "succès",
-        "message": "Livre ajouté avec succès",
-        "livre_id": new_livre.id,
-        "livre": {
-            "id": new_livre.id,
-            "titre": new_livre.titre,
-            "isbn": new_livre.isbn
-        }
-    }
+    return new_livre
 
-@router.put("/{livre_id}")
+@router.put("/{livre_id}", response_model=BookGet)
 def update_book(
     livre_id: int,
     book: BookUpdate,
@@ -251,10 +228,10 @@ def update_book(
     
     # Si on change l'auteur, vérifier qu'il existe
     if livre_id is not None:
-        auteur = db.query(Author).filter(Author.id == auteur_id).first()
+        auteur = db.query(Author).filter(Author.id == livre.auteur_id).first()
         if not auteur:
-            raise HTTPException(status_code=404, detail=f"Auteur avec l'ID {auteur_id} non trouvé")
-        livre.auteur_id = auteur_id
+            raise HTTPException(status_code=404, detail=f"Auteur avec l'ID {livre.auteur_id} non trouvé")
+        livre.auteur_id = livre.auteur_id
     
     # Mise à jour des champs
     if book.titre is not None:
@@ -292,15 +269,7 @@ def update_book(
     db.commit()
     db.refresh(livre)
     
-    return {
-        "statut": "succès",
-        "message": f"Livre {livre_id} mis à jour avec succès",
-        "livre": {
-            "id": livre.id,
-            "titre": livre.titre,
-            "isbn": livre.isbn
-        }
-    }
+    return livre
 
 @router.delete("/{livre_id}")
 def delete_book(livre_id: int, db: Session = Depends(get_db)):

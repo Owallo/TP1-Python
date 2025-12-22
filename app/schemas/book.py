@@ -5,7 +5,7 @@ from pydantic import BaseModel, Field, EmailStr, constr, model_validator, field_
 class BookCreate(BaseModel):
     titre: str = Field(..., min_length=1, max_length=255)
     isbn: str = Field(..., min_length=10, max_length=17)
-    annee_publication: int = Field(..., ge=0)
+    annee_publication: int = Field(..., ge=1940)
     nombre_exemplaires_disponibles: int = Field(..., ge=0)
     nombre_exemplaires_total: int = Field(..., ge=0)
     categorie: str = Field(..., min_length=1, max_length=50)
@@ -37,6 +37,16 @@ class BookCreate(BaseModel):
             raise ValueError('ISBN doit avoir 10 ou 13 chiffres')
         return v.strip()
         
+    @field_validator("annee_publication")
+    @classmethod
+    def annee_valide(cls, v: int) -> int:
+        annee_actuelle = date.today().year
+        if v < 1950 or v > annee_actuelle:
+            raise ValueError(
+                f"L'année de publication doit être comprise entre 1950 et {annee_actuelle}"
+            )
+        return v
+    
 class BookUpdate(BaseModel):
     titre: Optional[str] = Field(None, min_length=1, max_length=255)
     isbn: Optional[str] = Field(None, min_length=10, max_length=17)
@@ -76,10 +86,21 @@ class BookUpdate(BaseModel):
             raise ValueError('ISBN doit avoir 10 ou 13 chiffres')
         return v.strip()
 
+    @field_validator("annee_publication")
+    @classmethod
+    def annee_valide(cls, v: int) -> int:
+        annee_actuelle = date.today().year
+        if v < 1950 or v > annee_actuelle:
+            raise ValueError(
+                f"L'année de publication doit être comprise entre 1950 et {annee_actuelle}"
+            )
+        return v
+    
 class BookDelete(BaseModel):
     pass
 
 class BookGet(BaseModel):
+    id : int = Field(...)
     titre: str = Field(..., min_length=1, max_length=255)
     isbn: Optional[str] = None#Field(..., min_length=10, max_length=17)
     annee_publication: int = Field(..., ge=0)

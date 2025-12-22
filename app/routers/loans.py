@@ -31,7 +31,7 @@ def get_emprunt(db: Session = Depends(get_db), emprunt_id: int = None):
     
     return emprunt
  
-@router.put("/{emprunt_id}")
+@router.put("/{emprunt_id}", response_model=LoansGet)
 def update_emprunt(
     emprunt_id: int,
     emprunt : LoansUpdate,
@@ -65,17 +65,7 @@ def update_emprunt(
     db.commit()
     db.refresh(emprunt_base)
 
-    return {
-        "statut": "succès",
-        "message": f"L'emprunt '{emprunt_base.id}' a été mis à jour",
-        "emprunt_modifie": {
-            "id": emprunt_base.id,
-            "id_livre": emprunt_base.livre_id,
-            "nom_emprunteur": emprunt_base.nom_emprunteur,
-            "date_emprunt": emprunt_base.date_emprunt,
-            "date_retour": emprunt_base.date_retour_effectif
-        }
-    }
+    return emprunt_base
     
 @router.delete("/{emprunt_id}")
 def delete_emprunt(emprunt_id: int, db: Session = Depends(get_db)):
@@ -114,7 +104,7 @@ def delete_emprunt(emprunt_id: int, db: Session = Depends(get_db)):
             )
         )
 
-@router.post("/add")
+@router.post("/add", response_model=LoansGet)
 def create_emprunt(
     emprunt: LoansCreate,
     db: Session = Depends(get_db)
@@ -136,15 +126,4 @@ def create_emprunt(
     db.commit()
     db.refresh(new_emprunt)
 
-    return {
-        "statut": "succès",
-        "message": "Emprunt ajouté avec succès",
-        "emprunt_id": new_emprunt.id,
-        "emprunt": {
-            "id": new_emprunt.id,
-            "nom_emprunteur": new_emprunt.nom_emprunteur,
-            "email_emprunteur": new_emprunt.email_emprunteur,
-            "date_emprunt": new_emprunt.date_emprunt,
-            "date_retour": new_emprunt.date_limite_retour
-        }
-    }
+    return new_emprunt
