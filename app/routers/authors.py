@@ -82,17 +82,7 @@ def search_authors(
     pages = (total + page_size - 1) // page_size
     
     return {
-        "auteurs": [
-            {
-                "id": aut.id,
-                "prenom": aut.prenom,
-                "nom": aut.nom,
-                "date_naissance": aut.date_naissance,
-                "nationalite": aut.nationalite,
-                "livres": aut.livres
-            }
-            for aut in auteurs
-        ],
+        "auteurs" : auteurs,
         "page_courante": page,
         "taille_page": page_size,
         "total": total,
@@ -112,7 +102,7 @@ def get_auteur(db: Session = Depends(get_db), auteur_id: int = None):
     else:
         return auteur
  
-@router.put("/{auteur_id}")
+@router.put("/{auteur_id}", response_model=AuteurGet)
 def update_auteur(
     auteur_id: int,
     auteur : AuteurUpdate,
@@ -138,17 +128,7 @@ def update_auteur(
     db.commit()
     db.refresh(auteur_base)
     
-    return {
-        "statut": "succès",
-        "message": f"L'auteur '{auteur_base.prenom} {auteur_base.nom}' a été mis à jour",
-        "auteur_modifie": {
-            "id": auteur_base.id,
-            "prenom": auteur_base.prenom,
-            "nom": auteur_base.nom,
-            "date_naissance": auteur_base.date_naissance,
-            "nationalite": auteur_base.nationalite
-        }
-    }
+    return auteur_base
 
 
 @router.delete("/{auteur_id}")
@@ -184,11 +164,11 @@ def delete_auteur(auteur_id: int, db: Session = Depends(get_db)):
             status_code=400,
             detail=(
                 f"Suppression impossible pour '{nom_auteur}'. "
-                "Vérifiez qu'il n'y a pas d'emprunts actifs associés."
+                "Vérifiez qu'il n'y a pas de livre(s) ou d'emprunt(s) actifs associés."
             )
         )
 
-@router.post("/add")
+@router.post("/add", response_model=AuteurGet)
 def create_auteur(
     auteur : AuteurCreate,
     db: Session = Depends(get_db)
@@ -205,13 +185,4 @@ def create_auteur(
     db.commit()
     db.refresh(new_auteur)
     
-    return {
-        "statut": "succès",
-        "message": "Auteur ajouté avec succès",
-        "auteur_id": new_auteur.id,
-        "auteur": {
-            "id": new_auteur.id,
-            "prenom": new_auteur.prenom,
-            "nom": new_auteur.nom
-        }
-    }
+    return new_auteur
